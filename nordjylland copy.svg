@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 462.8 345.6">
+  <defs>
+    <style>
+      .cls-1 {
+        clip-path: url(#clippath-11);
+      }
+
+      .cls-2 {
+        fill: #fff;
+        stroke: #000;
+        stroke-miterlimit: 10;
+      }
+
+      .cls-3 {
+        clip-path: url(#clippath-2);
+      }
+
+      .cls-4 {
+        clip-path: url(#clippath-13);
+      }
+
+      .cls-5 {
+        fill:rgba(255, 255, 255, 0);
+      }
+
+      .cls-5, .cls-6 {
+        stroke-width: 0px;
+      }
+
+      .cls-7 {
+        clip-path: url(#clippath-6);
+      }
+
+      .cls-6 {
+        fill: none;
+      }
+
+      .cls-8 {
+        clip-path: url(#clippath-7);
+      }
+
+      .cls-9 {
+        clip-path: url(#clippath-1);
+      }
+
+      .cls-10 {
+        clip-path: url(#clippath-4);
+      }
+
+      .cls-11 {
+        clip-path: url(#clippath-12);
+      }
+
+      .cls-12 {
+        clip-path: url(#clippath-9);
+      }
+
+      .cls-13 {
+        clip-path: url(#clippath);
+      }
+
+      .cls-14 {
+        clip-path: url(#clippath-3);
+      }
+
+      .cls-15 {
+        clip-path: url(#clippath-8);
+      }
+
+      .cls-16 {
+        clip-path: url(#clippath-14);
+      }
+
+      .cls-17 {
+        clip-path: url(#clippath-5);
+      }
+
+      .cls-18 {
+        clip-path: url(#clippath-10);
+      }
+    </style>
+    <clipPath id="clippath">
+      <rect class="cls-6" width="462.8" height="345.6"/>
+    </clipPath>
+    <clipPath id="clippath-1">
+      <rect class="cls-6" width="462.8" height="345.6"/>
+    </clipPath>
+    <clipPath id="clippath-2">
+      <rect class="cls-6" width="462.8" height="345.6"/>
+    </clipPath>
+    <clipPath id="clippath-3">
+      <rect class="cls-6" width="462.8" height="345.6"/>
+    </clipPath>
+    <clipPath id="clippath-4">
+      <rect class="cls-6" width="462.8" height="345.6"/>
+    </clipPath>
+    <clipPath id="clippath-5">
+      <rect class="cls-6" width="462.8" height="345.6"/>
+    </clipPath>
+    <clipPath id="clippath-6">
+      <rect class="cls-6" width="462.8" height="345.6"/>
+    </clipPath>
+    <clipPath id="clippath-7">
+      <rect class="cls-6" width="462.8" height="345.6"/>
+    </clipPath>
+    <clipPath id="clippath-8">
+      <rect class="cls-6" width="462.8" height="345.6"/>
+    </clipPath>
+    <clipPath id="clippath-9">
+      <rect class="cls-6" width="462.8" height="345.6"/>
+    </clipPath>
+    <clipPath id="clippath-10">
+      <rect class="cls-6" width="462.8" height="345.6"/>
+    </clipPath>
+    <clipPath id="clippath-11">
+      <rect class="cls-6" width="462.8" height="345.6"/>
+    </clipPath>
+    <clipPath id="clippath-12">
+      <rect class="cls-6" width="462.8" height="345.6"/>
+    </clipPath>
+    <clipPath id="clippath-13">
+      <rect class="cls-6" width="462.8" height="345.6"/>
+    </clipPath>
+    <clipPath id="clippath-14">
+      <rect class="cls-6" width="462.8" height="345.6"/>
+    </clipPath>
+  </defs>
+  <g id="figure_1" data-name="figure 1">
+    <g id="Background">
+      <path class="cls-5" d="M0,345.6h462.8V0H0v345.6Z"/>
+    </g>
+    <g id="axes_1" data-name="axes 1">
+      <g id="Jammerbugt" data-kommune="Jammerbugt">
+        <g class="cls-13">
+          <g id="patch_12" data-name="patch 12">
+            <g class="cls-9">
+            </g>
+          </g>
+        </g>
+      </g>
+      <g id="Thisted" data-kommune="Thisted">
+        <g class="cls-3">
+        </g>
+      </g>
+      <g id="Vesthimmerland" data-kommune="Vesthimmerland">
+        <g class="cls-14">
+        </g>
+        <g id="Vesthimmerland-2" data-name="Vesthimmerland">
+          <g class="cls-10">
+          </g>
+        </g>
+      </g>
+      <g id="Aalborg" data-kommune="Aalborg">
+        <g class="cls-17">
+        </g>
+        <g id="Aalborg-2" data-name="Aalborg">
+          <g class="cls-7">
+          </g>
+        </g>
+        <g id="Aalborg-3" data-name="Aalborg">
+          <g class="cls-8">
+          </g>
+        </g>
+      </g>
+      <g id="Frederikshavn" data-kommune="Frederikshavn">
+        <g class="cls-15">
+        </g>
+      </g>
+      <g id="Mariagerfjord" data-kommune="Mariagerfjord">
+        <g class="cls-12">
+        </g>
+      </g>
+      <g id="Morsø" data-kommune="Morsø">
+        <g class="cls-18">
+        </g>
+      </g>
+      <g id="Hjørring" data-kommune="Hjørring">
+        <g class="cls-1">
+        </g>
+      </g>
+      <g id="Læsø" data-kommune="Læsø">
+        <g class="cls-11">
+        </g>
+      </g>
+      <g id="Brønderslev" data-kommune="Brønderslev">
+        <g class="cls-4">
+        </g>
+      </g>
+      <g id="Rebild" data-kommune="Rebild">
+        <g class="cls-16">
+        </g>
+        <g id="mapCounts">
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

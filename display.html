@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="da">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Event Display - TV2 Nord</title>
+    <style>
+      @font-face {
+        font-family: "TV2";
+        src: url("TV2.woff2") format("woff2");
+        font-weight: normal;
+        font-style: normal;
+        font-display: swap; /* For better loading performance */
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "TV2", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #000523 0%, #1f233d 100%);
+        height: 100vh;
+        color: white;
+        overflow: hidden;
+      }
+
+      .display-container {
+        height: 100vh;
+        display: flex;
+        padding: 40px;
+        gap: 40px;
+      }
+
+      .map-section {
+        flex: 0 0 60%;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 30px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .stats-section {
+        flex: 0 0 40%;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .header h1 {
+        font-size: 48px;
+        color: #fff;
+        margin-bottom: 10px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      }
+
+      .header p {
+        font-size: 24px;
+        opacity: 0.9;
+      }
+
+      .map-container {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-image: url("background.png");
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        border-radius: 15px;
+        overflow: hidden;
+        position: relative; /* For positioning overlay */
+      }
+
+      .svg-container {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        z-index: 5; /* Above background, below foreground */
+      }
+
+      .svg-container svg {
+        max-width: 100%;
+        max-height: 100%;
+        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+      }
+
+      .map-foreground {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: url("foreground.png");
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        pointer-events: none; /* Allow clicking through to SVG */
+        z-index: 10; /* Above SVG */
+      }
+
+      .number-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none; /* Allow clicking through */
+        z-index: 15; /* Above foreground */
+      }
+
+      .number-label {
+        position: absolute;
+        font-family: "Segoe UI", Arial, sans-serif;
+        font-weight: bold;
+        font-size: 18px;
+        color: #fff;
+        text-align: center;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 5, 35, 0.6);
+        border-radius: 12px;
+        padding: 4px 8px;
+        border: 2px solid #f0281e;
+        min-width: 30px;
+      }
+
+      .map-container svg {
+        max-width: 100%;
+        max-height: 100%;
+        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+      }
+
+      .stat-card {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 25px;
+        text-align: center;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease;
+      }
+
+      .stat-number {
+        font-size: 72px;
+        font-weight: bold;
+        color: #f0281e;
+        margin-bottom: 10px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        transition: all 0.5s ease;
+      }
+
+      .stat-label {
+        font-size: 18px;
+        opacity: 0.9;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .top-kommuner {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 25px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        flex: 1;
+      }
+
+      .qr-section {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        padding: 25px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        text-align: center;
+        flex-shrink: 0;
+      }
+
+      .qr-section h3 {
+        font-size: 20px;
+        margin-bottom: 20px;
+        color: #ff6b35;
+      }
+
+      .qr-placeholder {
+        width: 120px;
+        height: 120px;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 8px;
+        margin: 0 auto 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+      }
+
+      .qr-text {
+        display: none; /* Skjul placeholder tekst */
+      }
+
+      .qr-description {
+        font-size: 14px;
+        opacity: 0.9;
+        margin: 0;
+      }
+      .qr-placeholder {
+        background-image: url("qr-code.png");
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+      }
+
+      .top-kommuner h3 {
+        font-size: 20px;
+        margin-bottom: 20px;
+        color: #f0281e;
+        text-align: center;
+      }
+
+      .kommune-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        font-size: 16px;
+      }
+
+      .kommune-item:last-child {
+        border-bottom: none;
+      }
+
+      .kommune-count {
+        font-weight: bold;
+        color: #f0281e;
+        font-size: 18px;
+        min-width: 40px;
+        text-align: right;
+        transition: all 0.3s ease;
+      }
+
+      .animated-count {
+        animation: countUp 0.8s ease-out;
+      }
+
+      @keyframes countUp {
+        0% {
+          transform: scale(1.5);
+          color: #4caf50;
+        }
+        100% {
+          transform: scale(1);
+          color: #f0281e;
+        }
+      }
+
+      .pulse {
+        animation: pulse 0.6s ease-in-out;
+      }
+
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.05);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      .last-updated {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 10px 15px;
+        border-radius: 8px;
+        font-size: 14px;
+        opacity: 0.7;
+      }
+
+      /* Map styling */
+      .map-region {
+        transition: all 0.3s ease;
+        cursor: pointer;
+      }
+
+      .map-region:hover {
+        stroke-width: 3;
+        filter: brightness(1.1);
+      }
+
+      .map-label {
+        font-size: 14px;
+        font-weight: bold;
+        text-anchor: middle;
+        fill: #333;
+        text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+      }
+
+      @media (max-width: 1200px) {
+        .display-container {
+          flex-direction: column;
+          padding: 20px;
+        }
+
+        .map-section {
+          flex: 0 0 60%;
+        }
+
+        .stats-section {
+          flex: 0 0 40%;
+          flex-direction: row;
+          gap: 15px;
+        }
+
+        .stat-number {
+          font-size: 48px;
+        }
+
+        .header h1 {
+          font-size: 36px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="display-container">
+      <!-- Map Section (60%) -->
+      <div class="map-section">
+        <div class="header">
+          <h1>Hele Nordjylland er her!</h1>
+          <p>Så mange mennesker har været her i dag:</p>
+        </div>
+
+        <div class="map-container" id="mapContainer">
+          <!-- SVG container -->
+          <div class="svg-container" id="svgContainer">
+            <p id="loadingMessage">Indlæser kort...</p>
+          </div>
+          <!-- Number overlay (above foreground) -->
+          <div class="number-overlay" id="numberOverlay">
+            <!-- Numbers will be positioned here -->
+          </div>
+          <!-- Foreground overlay -->
+          <div class="map-foreground"></div>
+        </div>
+      </div>
+
+      <!-- Stats Section (40%) -->
+      <div class="stats-section">
+        <!-- Today's total -->
+        <div class="stat-card">
+          <div class="stat-number" id="todayTotal">0</div>
+          <div class="stat-label">Besøgende i dag</div>
+        </div>
+
+        <!-- Most active kommune today -->
+        <div class="stat-card">
+          <div
+            class="stat-number"
+            id="topKommune"
+            style="font-size: 24px; line-height: 1.2"
+          >
+            Ingen data
+          </div>
+          <div class="stat-label">Mest aktive kommune</div>
+        </div>
+
+        <!-- Top kommuner list -->
+        <div class="top-kommuner">
+          <h3>Top 5 kommuner i dag</h3>
+          <div id="topKommuneList">
+            <!-- Will be populated by JavaScript -->
+          </div>
+        </div>
+
+        <!-- QR Code section -->
+        <div class="qr-section">
+          <h3>Check ind her</h3>
+          <div class="qr-placeholder">
+            <div class="qr-text">QR-kode</div>
+          </div>
+          <p class="qr-description">Scan for at checke ind</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="last-updated" id="lastUpdated">Sidste opdatering: --:--</div>
+
+    <script>
+      // Data storage
+      let visitors = [];
+      let todayKey = new Date().toDateString();
+      let lastDataSnapshot = "";
+
+      // Load SVG directly into HTML
+      function loadSVG() {
+        console.log("Loading SVG...");
+        fetch("nordjylland.svg")
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.text();
+          })
+          .then((svgText) => {
+            document.getElementById("svgContainer").innerHTML = svgText;
+            const loadingMessage = document.getElementById("loadingMessage");
+            if (loadingMessage) loadingMessage.remove();
+            console.log("✅ SVG loaded successfully");
+            // Update map after SVG is loaded
+            updateDisplay(true);
+          })
+          .catch((error) => {
+            console.error("❌ Error loading SVG:", error);
+            document.getElementById("svgContainer").innerHTML =
+              "<p>Fejl ved indlæsning af kort: " + error.message + "</p>";
+          });
+      }
+
+      function loadData() {
+        const newData = JSON.parse(
+          localStorage.getItem("eventVisitors") || "[]"
+        );
+        const newSnapshot = JSON.stringify(newData);
+
+        // Check if data has changed
+        const hasChanged = newSnapshot !== lastDataSnapshot;
+        lastDataSnapshot = newSnapshot;
+
+        visitors = newData;
+        updateDisplay(hasChanged);
+        updateLastUpdated();
+      }
+
+      function updateDisplay(animate = false) {
+        const today = visitors.filter((v) => v.date === todayKey);
+        const todayTotal = today.reduce((sum, v) => sum + v.antal, 0);
+
+        // Update today's total with animation
+        updateNumber("todayTotal", todayTotal, animate);
+
+        // Calculate kommune statistics
+        const kommuneStats = {};
+        today.forEach((v) => {
+          kommuneStats[v.kommune] = (kommuneStats[v.kommune] || 0) + v.antal;
+        });
+
+        // Update top kommune
+        const topKommune = Object.keys(kommuneStats).reduce(
+          (a, b) => ((kommuneStats[a] || 0) > (kommuneStats[b] || 0) ? a : b),
+          "Ingen data"
+        );
+
+        const topKommuneElement = document.getElementById("topKommune");
+        if (topKommune !== "Ingen data") {
+          topKommuneElement.textContent = topKommune;
+          if (animate) {
+            topKommuneElement.classList.add("pulse");
+            setTimeout(() => topKommuneElement.classList.remove("pulse"), 600);
+          }
+        } else {
+          topKommuneElement.textContent = "Ingen data";
+        }
+
+        // Update map and top list
+        updateMap(kommuneStats, animate);
+        updateTopKommuneList(kommuneStats, animate);
+      }
+
+      function updateNumber(elementId, newValue, animate) {
+        const element = document.getElementById(elementId);
+        const oldValue = parseInt(element.textContent) || 0;
+
+        if (newValue !== oldValue) {
+          if (animate && newValue > oldValue) {
+            // Animate the number increase
+            element.classList.add("animated-count");
+            setTimeout(() => element.classList.remove("animated-count"), 800);
+
+            // Count up animation
+            animateCounter(element, oldValue, newValue, 800);
+          } else {
+            element.textContent = newValue;
+          }
+        }
+      }
+
+      function animateCounter(element, start, end, duration) {
+        const startTime = performance.now();
+
+        function updateCounter(currentTime) {
+          const elapsed = currentTime - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+
+          const current = Math.floor(start + (end - start) * progress);
+          element.textContent = current;
+
+          if (progress < 1) {
+            requestAnimationFrame(updateCounter);
+          }
+        }
+
+        requestAnimationFrame(updateCounter);
+      }
+
+      function updateMap(stats, animate) {
+        console.log("=== Starting updateMap ===");
+        const maxCount = Math.max(...Object.values(stats), 1);
+
+        // Clear existing number labels
+        const numberOverlay = document.getElementById("numberOverlay");
+        if (numberOverlay) {
+          numberOverlay.innerHTML = "";
+          console.log("✅ numberOverlay found and cleared");
+        } else {
+          console.log("❌ numberOverlay not found");
+          return;
+        }
+
+        document.querySelectorAll("[data-kommune]").forEach((element) => {
+          const kommune = element.getAttribute("data-kommune");
+          const count = stats[kommune] || 0;
+          console.log(`Kommune: ${kommune}, Count: ${count}`);
+
+          const intensity = count / maxCount;
+
+          // Color based on visitor count
+          let color;
+          if (count === 0) {
+            color = "#e8f5e8"; // Light green default
+          } else {
+            const hue = 120; // Green hue
+            const saturation = 60 + intensity * 35; // 60-95%
+            const lightness = 85 - intensity * 45; // 85-40%
+            color = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+          }
+
+          // Update ALL polygons in this kommune group
+          const polygons = element.querySelectorAll("polygon");
+          polygons.forEach((polygon) => {
+            polygon.style.fill = color;
+          });
+          console.log(
+            `✅ Updated ${polygons.length} polygons for ${kommune}: ${color}`
+          );
+
+          if (animate && count > 0) {
+            element.classList.add("pulse");
+            setTimeout(() => element.classList.remove("pulse"), 600);
+          }
+
+          // Add count label if there are visitors
+          if (count > 0) {
+            addMapCountLabel(kommune, count, element);
+          }
+        });
+      }
+
+      function addMapCountLabel(kommune, count, kommuneElement) {
+        const polygons = kommuneElement.querySelectorAll("polygon");
+        if (polygons.length === 0) {
+          console.log(`❌ Could not find polygons for ${kommune}`);
+          return;
+        }
+
+        // Calculate the combined bounding box of all polygons
+        let minX = Infinity,
+          minY = Infinity,
+          maxX = -Infinity,
+          maxY = -Infinity;
+
+        polygons.forEach((polygon) => {
+          const bbox = polygon.getBBox();
+          minX = Math.min(minX, bbox.x);
+          minY = Math.min(minY, bbox.y);
+          maxX = Math.max(maxX, bbox.x + bbox.width);
+          maxY = Math.max(maxY, bbox.y + bbox.height);
+        });
+
+        // Calculate center of combined area
+        const svgCenterX = (minX + maxX) / 2;
+        const svgCenterY = (minY + maxY) / 2;
+
+        // Get the map container to calculate relative positions
+        const mapContainer = document.getElementById("mapContainer");
+        const svgContainer = document.getElementById("svgContainer");
+        const svg = svgContainer.querySelector("svg");
+
+        if (!svg) return;
+
+        // Get SVG dimensions and position
+        const svgRect = svg.getBoundingClientRect();
+        const containerRect = mapContainer.getBoundingClientRect();
+
+        // Calculate viewBox scaling
+        const viewBox = svg.viewBox.baseVal;
+        const scaleX = svgRect.width / viewBox.width;
+        const scaleY = svgRect.height / viewBox.height;
+
+        // Convert SVG coordinates to container coordinates
+        const containerX =
+          svgRect.left - containerRect.left + svgCenterX * scaleX;
+        const containerY =
+          svgRect.top - containerRect.top + svgCenterY * scaleY;
+
+        // Create HTML number label
+        const numberLabel = document.createElement("div");
+        numberLabel.className = "number-label";
+        numberLabel.textContent = count;
+        numberLabel.style.left = containerX + "px";
+        numberLabel.style.top = containerY + "px";
+
+        const numberOverlay = document.getElementById("numberOverlay");
+        if (numberOverlay) {
+          numberOverlay.appendChild(numberLabel);
+          console.log(
+            `✅ Added HTML label for ${kommune}: ${count} at center of ${polygons.length} polygons`
+          );
+        }
+      }
+
+      function updateTopKommuneList(stats, animate) {
+        const container = document.getElementById("topKommuneList");
+
+        // Sort kommuner by count
+        const sortedKommuner = Object.entries(stats)
+          .filter(([, count]) => count > 0)
+          .sort(([, a], [, b]) => b - a)
+          .slice(0, 5);
+
+        container.innerHTML = "";
+
+        if (sortedKommuner.length === 0) {
+          container.innerHTML =
+            '<div style="text-align: center; opacity: 0.7; padding: 20px;">Ingen registreringer endnu</div>';
+          return;
+        }
+
+        sortedKommuner.forEach(([kommune, count], index) => {
+          const item = document.createElement("div");
+          item.className = "kommune-item";
+
+          const name = document.createElement("span");
+          name.textContent = `${index + 1}. ${kommune}`;
+
+          const countSpan = document.createElement("span");
+          countSpan.className = "kommune-count";
+          countSpan.textContent = count;
+
+          if (animate) {
+            countSpan.classList.add("animated-count");
+            setTimeout(() => countSpan.classList.remove("animated-count"), 800);
+          }
+
+          item.appendChild(name);
+          item.appendChild(countSpan);
+          container.appendChild(item);
+        });
+      }
+
+      function updateLastUpdated() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString("da-DK", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        });
+        document.getElementById(
+          "lastUpdated"
+        ).textContent = `Sidste opdatering: ${timeString}`;
+      }
+
+      // Check for daily reset
+      function checkDailyReset() {
+        const today = new Date().toDateString();
+        if (todayKey !== today) {
+          todayKey = today;
+          loadData();
+        }
+      }
+
+      // Initialize
+      loadData();
+      loadSVG(); // Load SVG immediately
+      setInterval(loadData, 30000); // Update every 30 seconds
+      setInterval(checkDailyReset, 60000); // Check every minute
+    </script>
+  </body>
+</html>
