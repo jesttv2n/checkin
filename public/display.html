@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="da">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Event Display - TV2 Nord</title>
+    <link rel="stylesheet" href="assets/display.css" />
+  </head>
+  <body>
+    <!-- Error Message -->
+    <div class="error-message" id="errorMessage">
+      Kan ikke oprette forbindelse til serveren. Forsøger igen...
+    </div>
+
+    <!-- Main Display Container -->
+    <div class="display-container">
+      <!-- Map Section (60%) -->
+      <div class="map-section">
+        <div class="header">
+          <div class="connection-status">
+            <div
+              class="status-indicator status-offline"
+              id="statusIndicator"
+            ></div>
+            <span id="statusText">Forbinder...</span>
+          </div>
+          <h1>Hele Nordjylland er her!</h1>
+          <p>Så mange mennesker har været her i dag:</p>
+        </div>
+
+        <div class="map-container" id="mapContainer">
+          <!-- SVG Container -->
+          <div class="svg-container" id="svgContainer">
+            <p id="loadingMessage">Indlæser kort...</p>
+          </div>
+
+          <!-- Number Overlay (above foreground) -->
+          <div class="number-overlay" id="numberOverlay">
+            <!-- Numbers will be positioned here by JavaScript -->
+          </div>
+
+          <!-- Foreground Overlay -->
+          <div class="map-foreground"></div>
+        </div>
+      </div>
+
+      <!-- Stats Section (40%) -->
+      <div class="stats-section">
+        <!-- Today's Total -->
+        <div class="stat-card">
+          <div class="stat-number" id="todayTotal">-</div>
+          <div class="stat-label">Besøgende i dag</div>
+        </div>
+
+        <!-- Most Active Kommune -->
+        <div class="stat-card">
+          <div
+            class="stat-number"
+            id="topKommune"
+            style="font-size: 24px; line-height: 1.2"
+          >
+            Indlæser...
+          </div>
+          <div class="stat-label">Mest aktive kommune</div>
+        </div>
+
+        <!-- Top Kommuner List -->
+        <div class="top-kommuner">
+          <h3>Top 5 kommuner i dag</h3>
+          <div id="topKommuneList">
+            <div style="text-align: center; opacity: 0.7; padding: 20px">
+              Indlæser data...
+            </div>
+          </div>
+        </div>
+
+        <!-- QR Code Section -->
+        <div class="qr-section">
+          <h3>Check ind her</h3>
+          <div class="qr-placeholder">
+            <div class="qr-text">QR-kode</div>
+          </div>
+          <p class="qr-description">Scan for at checke ind</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Last Updated Timestamp -->
+    <div class="last-updated" id="lastUpdated">Sidste opdatering: --:--</div>
+
+    <!-- JavaScript -->
+    <script src="assets/display.js"></script>
+  </body>
+</html>

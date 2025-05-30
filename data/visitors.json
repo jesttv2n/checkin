@@ -1,0 +1,29 @@
+[
+  {
+    "id": 1748604701214.565,
+    "kommune": "Jammerbugt",
+    "antal": 3,
+    "timestamp": "2025-05-30T11:31:41.214Z",
+    "date": "Fri May 30 2025",
+    "fingerprint": "a4e58cd4f8609526c8099cda67cf78dd",
+    "ip": "::1"
+  },
+  {
+    "id": 1748604703214.565,
+    "kommune": "Aalborg",
+    "antal": 10,
+    "timestamp": "2025-05-30T11:31:41.214Z",
+    "date": "Fri May 30 2025",
+    "fingerprint": "a4e58cd4f8609526c8099cda67cf78dd",
+    "ip": "::2"
+  },
+  {
+    "id": 17486041701214.564,
+    "kommune": "Vesthimmerland",
+    "antal": 25,
+    "timestamp": "2025-05-30T11:31:41.214Z",
+    "date": "Fri May 30 2025",
+    "fingerprint": "a4e58cd4f18609526c8099cda67cf78dd",
+    "ip": "::4"
+  }
+]

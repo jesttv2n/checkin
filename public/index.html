@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="da">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Event Check-in - TV2 Nord</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        min-height: 100vh;
+        color: white;
+      }
+
+      .container {
+        max-width: 400px;
+        margin: 0 auto;
+        padding: 20px;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .logo {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .logo h1 {
+        font-size: 24px;
+        color: #ff6b35;
+        margin-bottom: 5px;
+      }
+
+      .logo p {
+        font-size: 14px;
+        opacity: 0.9;
+      }
+
+      .card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        font-size: 16px;
+      }
+
+      select,
+      input {
+        width: 100%;
+        padding: 12px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        background: rgba(255, 255, 255, 0.9);
+        color: #333;
+      }
+
+      select:focus,
+      input:focus {
+        outline: 2px solid #ff6b35;
+        background: white;
+      }
+
+      .number-input {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .number-btn {
+        width: 40px;
+        height: 40px;
+        border: none;
+        border-radius: 6px;
+        background: #ff6b35;
+        color: white;
+        font-size: 18px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+
+      .number-btn:hover {
+        background: #e55a30;
+      }
+
+      .number-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      #antal {
+        text-align: center;
+        max-width: 80px;
+      }
+
+      .submit-btn {
+        width: 100%;
+        padding: 15px;
+        background: #ff6b35;
+        border: none;
+        border-radius: 8px;
+        color: white;
+        font-size: 18px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background 0.2s;
+        margin-top: 10px;
+        position: relative;
+      }
+
+      .submit-btn:hover:not(:disabled) {
+        background: #e55a30;
+      }
+
+      .submit-btn:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+      }
+
+      .loading {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 2px solid #ffffff;
+        border-radius: 50%;
+        border-top-color: transparent;
+        animation: spin 1s ease-in-out infinite;
+        margin-right: 10px;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .confirmation {
+        text-align: center;
+        display: none;
+      }
+
+      .confirmation.show {
+        display: block;
+      }
+
+      .checkmark {
+        font-size: 60px;
+        color: #4caf50;
+        margin-bottom: 20px;
+      }
+
+      .confirmation h2 {
+        margin-bottom: 15px;
+        color: #4caf50;
+      }
+
+      .confirmation p {
+        margin-bottom: 20px;
+        opacity: 0.9;
+      }
+
+      .tv2-btn {
+        background: #ff6b35;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 6px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+
+      .tv2-btn:hover {
+        background: #e55a30;
+      }
+
+      .error-message {
+        background: rgba(255, 68, 68, 0.9);
+        color: white;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        text-align: center;
+        display: none;
+      }
+
+      .error-message.show {
+        display: block;
+      }
+
+      .connection-status {
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: bold;
+      }
+
+      .connection-status.online {
+        background: #4caf50;
+        color: white;
+      }
+
+      .connection-status.offline {
+        background: #f44336;
+        color: white;
+      }
+
+      @media (max-width: 480px) {
+        .container {
+          padding: 15px;
+        }
+
+        .card {
+          padding: 20px;
+        }
+
+        .logo h1 {
+          font-size: 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Connection Status -->
+    <div class="connection-status offline" id="connectionStatus">Offline</div>
+
+    <!-- Registreringsformular -->
+    <div class="container" id="mainForm">
+      <div class="logo">
+        <h1>TV2 Nord Event</h1>
+        <p>Velkommen! Registrer dit besøg</p>
+      </div>
+
+      <div class="card">
+        <!-- Error Message -->
+        <div class="error-message" id="errorMessage"></div>
+
+        <form id="checkinForm">
+          <div class="form-group">
+            <label for="kommune">Hvilken kommune kommer du fra?</label>
+            <select id="kommune" required>
+              <option value="">Vælg kommune...</option>
+              <option value="Aalborg">Aalborg</option>
+              <option value="Brønderslev">Brønderslev</option>
+              <option value="Frederikshavn">Frederikshavn</option>
+              <option value="Hjørring">Hjørring</option>
+              <option value="Jammerbugt">Jammerbugt</option>
+              <option value="Læsø">Læsø</option>
+              <option value="Mariagerfjord">Mariagerfjord</option>
+              <option value="Morsø">Morsø</option>
+              <option value="Rebild">Rebild</option>
+              <option value="Thisted">Thisted</option>
+              <option value="Vesthimmerland">Vesthimmerland</option>
+              <option value="Anden del af Danmark">Anden del af Danmark</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="antal">Hvor mange personer er I i gruppen?</label>
+            <div class="number-input">
+              <button
+                type="button"
+                class="number-btn"
+                onclick="changeNumber(-1)"
+              >
+                -
+              </button>
+              <input
+                type="number"
+                id="antal"
+                value="1"
+                min="1"
+                max="50"
+                readonly
+              />
+              <button
+                type="button"
+                class="number-btn"
+                onclick="changeNumber(1)"
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" class="submit-btn" id="submitBtn">
+            Registrer besøg
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Bekræftelsesside -->
+    <div class="container confirmation" id="confirmationPage">
+      <div class="card">
+        <div class="checkmark">✓</div>
+        <h2>Tak for din registrering!</h2>
+        <p id="confirmationText">
+          Dit besøg er nu registreret. Vi sender dig videre til TV2 Nord om
+          lidt...
+        </p>
+        <button class="tv2-btn" onclick="goToTV2()">Gå til TV2 Nord nu</button>
+      </div>
+    </div>
+
+    <script>
+      // API Configuration
+      const API_BASE = window.location.origin;
+
+      // State
+      let isSubmitting = false;
+
+      // Initialize
+      document.addEventListener("DOMContentLoaded", function () {
+        checkConnectionStatus();
+        setInterval(checkConnectionStatus, 30000); // Check every 30 seconds
+      });
+
+      // Connection status check
+      async function checkConnectionStatus() {
+        try {
+          const response = await fetch(`${API_BASE}/api/stats`, {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+            timeout: 5000,
+          });
+
+          if (response.ok) {
+            updateConnectionStatus(true);
+          } else {
+            updateConnectionStatus(false);
+          }
+        } catch (error) {
+          updateConnectionStatus(false);
+        }
+      }
+
+      function updateConnectionStatus(isOnline) {
+        const status = document.getElementById("connectionStatus");
+        if (isOnline) {
+          status.textContent = "Online";
+          status.className = "connection-status online";
+        } else {
+          status.textContent = "Offline";
+          status.className = "connection-status offline";
+        }
+      }
+
+      // Form submission
+      document
+        .getElementById("checkinForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          if (isSubmitting) return;
+
+          const kommune = document.getElementById("kommune").value;
+          const antal = parseInt(document.getElementById("antal").value);
+
+          // Client-side validation
+          if (!kommune) {
+            showError("Vælg venligst en kommune");
+            return;
+          }
+
+          if (!antal || antal < 1 || antal > 50) {
+            showError("Antal skal være mellem 1 og 50");
+            return;
+          }
+
+          // Start submission
+          isSubmitting = true;
+          const submitBtn = document.getElementById("submitBtn");
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '<span class="loading"></span>Registrerer...';
+          hideError();
+
+          try {
+            const response = await fetch(`${API_BASE}/api/register`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                kommune: kommune,
+                antal: antal,
+              }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+              // Success
+              const confirmationText = `Du er checket ind som <strong>besøgende #${data.todayCount}</strong> i dag fra <strong>${kommune}</strong>.<br><br>Vi sender dig videre til TV2 Nord om lidt...`;
+
+              document.getElementById("confirmationText").innerHTML =
+                confirmationText;
+
+              // Show confirmation
+              document.getElementById("mainForm").style.display = "none";
+              document.getElementById("confirmationPage").classList.add("show");
+
+              // Auto redirect after 5 seconds
+              setTimeout(() => {
+                goToTV2();
+              }, 5000);
+            } else {
+              // Error from server
+              if (data.alreadyRegistered) {
+                showError(
+                  "Du har allerede registreret dig i dag. Tak for dit besøg!"
+                );
+              } else {
+                showError(data.error || "Der opstod en fejl. Prøv igen.");
+              }
+            }
+          } catch (error) {
+            console.error("Network error:", error);
+            showError(
+              "Ingen forbindelse til serveren. Kontroller din internetforbindelse og prøv igen."
+            );
+          } finally {
+            // Reset submission state
+            isSubmitting = false;
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = "Registrer besøg";
+          }
+        });
+
+      // Number input controls
+      function changeNumber(delta) {
+        const input = document.getElementById("antal");
+        const current = parseInt(input.value);
+        const newValue = Math.max(1, Math.min(50, current + delta));
+        input.value = newValue;
+      }
+
+      // Error handling
+      function showError(message) {
+        const errorDiv = document.getElementById("errorMessage");
+        errorDiv.textContent = message;
+        errorDiv.classList.add("show");
+
+        // Scroll to top to ensure error is visible
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      function hideError() {
+        const errorDiv = document.getElementById("errorMessage");
+        errorDiv.classList.remove("show");
+      }
+
+      // Redirect to TV2 Nord
+      function goToTV2() {
+        window.open("https://www.tv2nord.dk", "_blank");
+
+        // Reset form for next user
+        setTimeout(() => {
+          document.getElementById("confirmationPage").classList.remove("show");
+          document.getElementById("mainForm").style.display = "flex";
+          document.getElementById("checkinForm").reset();
+          document.getElementById("antal").value = "1";
+          hideError();
+        }, 1000);
+      }
+
+      // Keyboard navigation
+      document.addEventListener("keydown", function (e) {
+        if (
+          e.key === "ArrowUp" &&
+          document.activeElement === document.getElementById("antal")
+        ) {
+          e.preventDefault();
+          changeNumber(1);
+        } else if (
+          e.key === "ArrowDown" &&
+          document.activeElement === document.getElementById("antal")
+        ) {
+          e.preventDefault();
+          changeNumber(-1);
+        }
+      });
+
+      // Auto-focus on kommune select when page loads
+      window.addEventListener("load", function () {
+        setTimeout(() => {
+          document.getElementById("kommune").focus();
+        }, 500);
+      });
+    </script>
+  </body>
+</html>
