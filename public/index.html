@@ -229,6 +229,15 @@
         background: #f0281e;
         color: white;
       }
+      .logo-image {
+        max-width: 200px !important;
+        height: auto;
+        margin-bottom: 20px;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2));
+      }
 
       @media (max-width: 480px) {
         .container {
@@ -238,19 +247,6 @@
         .card {
           padding: 20px;
         }
-
-        /* Logo styling - tilføj dette til dine eksisterende styles */
-        .logo-image {
-          max-width: 200px;
-          height: auto;
-          margin-bottom: 20px;
-          display: block;
-          margin-left: auto;
-          margin-right: auto;
-          filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2));
-        }
-
-        /* Opdater eksisterende .logo styling */
         .logo {
           text-align: center;
           margin-bottom: 30px;
@@ -271,7 +267,7 @@
         /* Responsive logo */
         @media (max-width: 480px) {
           .logo-image {
-            max-width: 150px;
+            max-width: 150px !important;
             margin-bottom: 15px;
           }
 
