@@ -12,10 +12,11 @@
       }
 
       body {
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-        min-height: 100vh;
+        font-family: "TV2", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #000523 0%, #1f233d 100%);
+        height: 100vh;
         color: white;
+        overflow: hidden;
       }
 
       .container {
@@ -35,7 +36,7 @@
 
       .logo h1 {
         font-size: 24px;
-        color: #ff6b35;
+        color: #f0281e;
         margin-bottom: 5px;
       }
 
@@ -77,7 +78,7 @@
 
       select:focus,
       input:focus {
-        outline: 2px solid #ff6b35;
+        outline: 2px solid #f0281e;
         background: white;
       }
 
@@ -92,7 +93,7 @@
         height: 40px;
         border: none;
         border-radius: 6px;
-        background: #ff6b35;
+        background: #f0281e;
         color: white;
         font-size: 18px;
         font-weight: bold;
@@ -101,7 +102,7 @@
       }
 
       .number-btn:hover {
-        background: #e55a30;
+        background: #f0281e;
       }
 
       .number-btn:disabled {
@@ -117,7 +118,7 @@
       .submit-btn {
         width: 100%;
         padding: 15px;
-        background: #ff6b35;
+        background: #f0281e;
         border: none;
         border-radius: 8px;
         color: white;
@@ -130,7 +131,7 @@
       }
 
       .submit-btn:hover:not(:disabled) {
-        background: #e55a30;
+        background: #f0281e;
       }
 
       .submit-btn:disabled {
@@ -181,7 +182,7 @@
       }
 
       .tv2-btn {
-        background: #ff6b35;
+        background: #f0281e;
         color: white;
         border: none;
         padding: 12px 24px;
@@ -196,7 +197,7 @@
       }
 
       .error-message {
-        background: rgba(255, 68, 68, 0.9);
+        background: #f0281e;
         color: white;
         padding: 15px;
         border-radius: 8px;
@@ -225,7 +226,7 @@
       }
 
       .connection-status.offline {
-        background: #f44336;
+        background: #f0281e;
         color: white;
       }
 
@@ -238,21 +239,63 @@
           padding: 20px;
         }
 
+        /* Logo styling - tilføj dette til dine eksisterende styles */
+        .logo-image {
+          max-width: 200px;
+          height: auto;
+          margin-bottom: 20px;
+          display: block;
+          margin-left: auto;
+          margin-right: auto;
+          filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2));
+        }
+
+        /* Opdater eksisterende .logo styling */
+        .logo {
+          text-align: center;
+          margin-bottom: 30px;
+        }
+
         .logo h1 {
-          font-size: 20px;
+          font-size: 24px;
+          color: #f0281e;
+          margin-bottom: 5px;
+        }
+
+        .logo p {
+          font-size: 16px;
+          opacity: 0.9;
+          margin-bottom: 0;
+        }
+
+        /* Responsive logo */
+        @media (max-width: 480px) {
+          .logo-image {
+            max-width: 150px;
+            margin-bottom: 15px;
+          }
+
+          .logo h1 {
+            font-size: 20px;
+          }
+
+          .logo p {
+            font-size: 14px;
+          }
         }
       }
     </style>
   </head>
   <body>
     <!-- Connection Status -->
-    <div class="connection-status offline" id="connectionStatus">Offline</div>
+    <!--<div class="connection-status offline" id="connectionStatus">Offline</div>-->
 
     <!-- Registreringsformular -->
     <div class="container" id="mainForm">
       <div class="logo">
-        <h1>TV2 Nord Event</h1>
-        <p>Velkommen! Registrer dit besøg</p>
+        <img src="assets/logo.png" alt="TV2 Nord" class="logo-image" />
+        <h1>Velkommen til TV2 Nord</h1>
+        <p>Hvor kommer I fra?</p>
       </div>
 
       <div class="card">
@@ -289,14 +332,7 @@
               >
                 -
               </button>
-              <input
-                type="number"
-                id="antal"
-                value="1"
-                min="1"
-                max="50"
-                readonly
-              />
+              <input type="number" id="antal" value="1" min="1" max="50" />
               <button
                 type="button"
                 class="number-btn"
