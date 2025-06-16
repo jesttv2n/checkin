@@ -230,7 +230,7 @@ class EventDisplay {
       element.textContent = topKommune;
       if (animate) {
         element.classList.add("pulse");
-        setTimeout(() => element.classList.remove("pulse"), 600);
+        setTimeout(() => element.classList.remove("pulse"), 2000);
       }
     } else {
       element.textContent = "Ingen data";
@@ -277,7 +277,7 @@ class EventDisplay {
 
       if (animate && count > 0) {
         element.classList.add("pulse");
-        setTimeout(() => element.classList.remove("pulse"), 600);
+        setTimeout(() => element.classList.remove("pulse"), 2000);
       }
 
       // Add count label if there are visitors

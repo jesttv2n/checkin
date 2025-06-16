@@ -239,9 +239,12 @@ body {
 }
 
 .qr-section h3 {
-  font-size: 20px;
+  font-size: 32px;
+  font-weight: 900;
   margin-bottom: 20px;
   color: #f0281e;
+  text-transform: bold;
+  text-transform: uppercase;
 }
 
 .qr-placeholder {
@@ -287,18 +290,35 @@ body {
 }
 
 .pulse {
-  animation: pulse 0.6s ease-in-out;
+  animation: pulse-elegant 2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  -webkit-animation: pulse-elegant 2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-@keyframes pulse {
+@keyframes pulse-elegant {
   0% {
     transform: scale(1);
+    filter: brightness(1);
+    -webkit-transform: scale(1);
+    -moz-transform: scale(1);
+    -ms-transform: scale(1);
+    -o-transform: scale(1);
   }
   50% {
-    transform: scale(1.05);
+    transform: scale(1.015);
+    filter: brightness(1.05);
+    -webkit-transform: scale(1.015);
+    -moz-transform: scale(1.015);
+    -ms-transform: scale(1.015);
+    -o-transform: scale(1.015);
   }
   100% {
     transform: scale(1);
+    filter: brightness(1);
+    -webkit-transform: scale(1);
+    -moz-transform: scale(1);
+    -ms-transform: scale(1);
+    -o-transform: scale(1);
+    -webkit-filter: brightness(1);
   }
 }
 
