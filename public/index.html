@@ -50,8 +50,7 @@
         backdrop-filter: blur(10px);
         border-radius: 15px;
         padding: 30px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0px 0px 19px 9px #0000006e;
       }
 
       .form-group {
@@ -108,11 +107,6 @@
       .number-btn:disabled {
         opacity: 0.5;
         cursor: not-allowed;
-      }
-
-      #antal {
-        text-align: center;
-        max-width: 80px;
       }
 
       .submit-btn {
@@ -320,23 +314,19 @@
 
           <div class="form-group">
             <label for="antal">Hvor mange personer er I i gruppen?</label>
-            <div class="number-input">
-              <button
-                type="button"
-                class="number-btn"
-                onclick="changeNumber(-1)"
-              >
-                -
-              </button>
-              <input type="number" id="antal" value="1" min="1" max="50" />
-              <button
-                type="button"
-                class="number-btn"
-                onclick="changeNumber(1)"
-              >
-                +
-              </button>
-            </div>
+            <select id="antal" required>
+              <option value="">Vælg antal...</option>
+              <option value="1">1 person</option>
+              <option value="2">2 personer</option>
+              <option value="3">3 personer</option>
+              <option value="4">4 personer</option>
+              <option value="5">5 personer</option>
+              <option value="6">6 personer</option>
+              <option value="7">7 personer</option>
+              <option value="8">8 personer</option>
+              <option value="9">9 personer</option>
+              <option value="10">10 personer</option>
+            </select>
           </div>
 
           <button type="submit" class="submit-btn" id="submitBtn">
