@@ -345,7 +345,7 @@
           Dit besøg er nu registreret. Vi sender dig videre til TV2 Nord om
           lidt...
         </p>
-        <button class="tv2-btn" onclick="goToTV2()">Gå til TV2 Nord nu</button>
+        <button class="tv2-btn" onclick="goToTV2()">Gå til Club Nord nu</button>
       </div>
     </div>
 
@@ -355,6 +355,78 @@
 
       // State
       let isSubmitting = false;
+
+      // Platform Detection og App Store Links
+      function detectPlatformAndGetAppLink() {
+        const userAgent =
+          navigator.userAgent || navigator.vendor || window.opera;
+
+        // iOS detection
+        if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+          return {
+            platform: "iOS",
+            storeName: "App Store",
+            appUrl: "https://apps.apple.com/dk/app/tv2-nord/id451998445?l=da",
+            icon: "📱",
+          };
+        }
+
+        // Android detection
+        if (/android/i.test(userAgent)) {
+          return {
+            platform: "Android",
+            storeName: "Google Play",
+            appUrl:
+              "https://play.google.com/store/apps/details?id=dk.releaze.tv2regionerne.tv2nord&hl=da",
+            icon: "📱",
+          };
+        }
+
+        // Desktop/andre platforme - vis begge links
+        return {
+          platform: "Desktop",
+          storeName: "App Stores",
+          appUrl: null, // Bruges ikke for desktop
+          icon: "📱",
+        };
+      }
+
+      function generateAppStoreLinks() {
+        const platform = detectPlatformAndGetAppLink();
+
+        if (platform.platform === "Desktop") {
+          // Vis begge links for desktop brugere
+          return `
+            <div style="margin-top: 20px; padding: 15px; background: rgba(240, 40, 30, 0.1); border-radius: 8px; border: 1px solid rgba(240, 40, 30, 0.3);">
+              <p style="margin-bottom: 10px; font-weight: 600; color: #f0281e;">📱 Download TV2 Nord app:</p>
+              <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                <a href="https://apps.apple.com/dk/app/tv2-nord/id451998445?l=da" 
+                   style="display: inline-block; padding: 8px 16px; background: #000; color: white; text-decoration: none; border-radius: 6px; font-size: 14px;"
+                   target="_blank">
+                  🍎 App Store
+                </a>
+                <a href="https://play.google.com/store/apps/details?id=dk.releaze.tv2regionerne.tv2nord&hl=da" 
+                   style="display: inline-block; padding: 8px 16px; background: #01875f; color: white; text-decoration: none; border-radius: 6px; font-size: 14px;"
+                   target="_blank">
+                  🤖 Google Play
+                </a>
+              </div>
+            </div>
+          `;
+        } else {
+          // Vis kun det relevante link for mobile brugere
+          return `
+            <div style="margin-top: 20px; padding: 15px; background: rgba(240, 40, 30, 0.1); border-radius: 8px; border: 1px solid rgba(240, 40, 30, 0.3);">
+              <p style="margin-bottom: 10px; font-weight: 600; color: #f0281e;">${platform.icon} Download TV2 Nord app:</p>
+              <a href="${platform.appUrl}" 
+                 style="display: inline-block; padding: 12px 20px; background: #f0281e; color: white; text-decoration: none; border-radius: 6px; font-weight: 600;"
+                 target="_blank">
+                Download fra ${platform.storeName}
+              </a>
+            </div>
+          `;
+        }
+      }
 
       // Initialize
       document.addEventListener("DOMContentLoaded", function () {
@@ -383,12 +455,14 @@
 
       function updateConnectionStatus(isOnline) {
         const status = document.getElementById("connectionStatus");
-        if (isOnline) {
-          status.textContent = "Online";
-          status.className = "connection-status online";
-        } else {
-          status.textContent = "Offline";
-          status.className = "connection-status offline";
+        if (status) {
+          if (isOnline) {
+            status.textContent = "Online";
+            status.className = "connection-status online";
+          } else {
+            status.textContent = "Offline";
+            status.className = "connection-status offline";
+          }
         }
       }
 
@@ -436,8 +510,15 @@
             const data = await response.json();
 
             if (response.ok) {
-              // Success
-              const confirmationText = `Du er checket ind som <strong>besøgende #${data.todayCount}</strong> i dag fra <strong>${kommune}</strong>.<br><br>Vi sender dig videre til TV2 Nord om lidt...`;
+              // Success - inkluder app store links
+              const appStoreSection = generateAppStoreLinks();
+
+              const confirmationText = `
+                Du er checket ind som <strong>besøgende #${data.todayCount}</strong> i dag fra <strong>${kommune}</strong>.
+                <br><br>
+                Vi sender dig videre til Club Nord om lidt...
+                ${appStoreSection}
+              `;
 
               document.getElementById("confirmationText").innerHTML =
                 confirmationText;
@@ -446,10 +527,10 @@
               document.getElementById("mainForm").style.display = "none";
               document.getElementById("confirmationPage").classList.add("show");
 
-              // Auto redirect after 5 seconds
+              // Auto redirect after 7 seconds (øget fra 5 for at give tid til at se app links)
               setTimeout(() => {
                 goToTV2();
-              }, 5000);
+              }, 7000);
             } else {
               // Error from server
               if (data.alreadyRegistered) {
@@ -496,18 +577,9 @@
         errorDiv.classList.remove("show");
       }
 
-      // Redirect to TV2 Nord
+      // Redirect to Club Nord
       function goToTV2() {
-        window.open("https://www.tv2nord.dk", "_blank");
-
-        // Reset form for next user
-        setTimeout(() => {
-          document.getElementById("confirmationPage").classList.remove("show");
-          document.getElementById("mainForm").style.display = "flex";
-          document.getElementById("checkinForm").reset();
-          document.getElementById("antal").value = "1";
-          hideError();
-        }, 1000);
+        window.location.href = "https://www.clubnord.dk";
       }
 
       // Keyboard navigation
