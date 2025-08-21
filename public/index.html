@@ -345,7 +345,7 @@
           Dit besøg er nu registreret. Vi sender dig videre til TV2 Nord om
           lidt...
         </p>
-        <button class="tv2-btn" onclick="goToTV2()">Gå til Club Nord nu</button>
+        <button class="tv2-btn" onclick="goToTV2()">Gå til TV2 Nord nu</button>
       </div>
     </div>
 
@@ -398,7 +398,11 @@
           // Vis begge links for desktop brugere
           return `
             <div style="margin-top: 20px; padding: 15px; background: rgba(240, 40, 30, 0.1); border-radius: 8px; border: 1px solid rgba(240, 40, 30, 0.3);">
-              <p style="margin-bottom: 10px; font-weight: 600; color: #f0281e;">📱 Download TV2 Nord app:</p>
+              <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 15px; gap: 10px;">
+                <img src="assets/app_logo.webp" alt="TV2 Nord App" 
+                     style="width: 40px; height: 40px; border-radius: 22%; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+                <p style="margin: 0; font-weight: 600; color: #f0281e;">Download TV2 Nord app:</p>
+              </div>
               <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
                 <a href="https://apps.apple.com/dk/app/tv2-nord/id451998445?l=da" 
                    style="display: inline-block; padding: 8px 16px; background: #000; color: white; text-decoration: none; border-radius: 6px; font-size: 14px;"
@@ -417,7 +421,11 @@
           // Vis kun det relevante link for mobile brugere
           return `
             <div style="margin-top: 20px; padding: 15px; background: rgba(240, 40, 30, 0.1); border-radius: 8px; border: 1px solid rgba(240, 40, 30, 0.3);">
-              <p style="margin-bottom: 10px; font-weight: 600; color: #f0281e;">${platform.icon} Download TV2 Nord app:</p>
+              <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 15px; gap: 10px;">
+                <img src="assets/app_logo.webp" alt="TV2 Nord App" 
+                     style="width: 40px; height: 40px; border-radius: 22%; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+                <p style="margin: 0; font-weight: 600; color: #f0281e;">Download TV2 Nord app:</p>
+              </div>
               <a href="${platform.appUrl}" 
                  style="display: inline-block; padding: 12px 20px; background: #f0281e; color: white; text-decoration: none; border-radius: 6px; font-weight: 600;"
                  target="_blank">
