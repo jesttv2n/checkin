@@ -4,6 +4,7 @@ const rateLimit = require("express-rate-limit");
 const helmet = require("helmet");
 const path = require("path");
 const crypto = require("crypto");
+const cookieParser = require("cookie-parser");
 const { Pool } = require("pg");
 
 const app = express();
@@ -166,6 +167,7 @@ app.use(
 );
 app.use(cors());
 app.use(express.json({ limit: "10mb" }));
+app.use(cookieParser());
 app.use(express.static("public"));
 
 // Rate limiting med forbedret tracking
@@ -266,7 +268,12 @@ async function logRegistrationAttempt(
     const hasNewColumns = availableColumns.length > 0;
 
     if (hasNewColumns) {
-      // Brug nye kolonner
+      // Brug nye kolonner - gem med fingerprint og cookie info
+      const fingerprint = generateFingerprint(req);
+      const cookieData = req.cookies["tv2nord_registered"]
+        ? `Previous: ${req.cookies["tv2nord_registered"].substring(0, 20)}...`
+        : "No cookie";
+
       const result = await pool.query(
         `
         INSERT INTO registrations (
@@ -283,12 +290,14 @@ async function logRegistrationAttempt(
           validationErrors,
           getRealIP(req),
           req.get("User-Agent"),
-          generateFingerprint(req),
+          fingerprint,
           JSON.stringify({
             "x-forwarded-for": req.headers["x-forwarded-for"],
             "x-real-ip": req.headers["x-real-ip"],
             "user-agent": req.headers["user-agent"],
             referer: req.headers["referer"],
+            "cookie-status": cookieData,
+            "detection-method": "cookie-based",
           }),
           rateLimitHit,
         ]
@@ -434,15 +443,15 @@ app.get("/api/stats", async (req, res) => {
   }
 });
 
-// POST /api/register - Med fuld logging
+// POST /api/register - Med cookie-baseret duplikatsjek + fuld logging
 app.post("/api/register", registrationLimiter, async (req, res) => {
   const { kommune, antal } = req.body;
-  const fingerprint = generateFingerprint(req);
 
   try {
     const validation = validateRegistration(kommune, antal);
 
     if (!validation.isValid) {
+      // Log ugyldig forsøg
       await logRegistrationAttempt(
         req,
         kommune,
@@ -457,46 +466,43 @@ app.post("/api/register", registrationLimiter, async (req, res) => {
       });
     }
 
-    // Check for duplikater - backward compatible
-    const duplicateQuery = await pool.query(`
-      SELECT column_name FROM information_schema.columns 
-      WHERE table_name = 'registrations' 
-      AND column_name IN ('date_key', 'is_valid')
-    `);
+    // Tjek cookie for duplikatsjek (device-specifik)
+    const registrationCookie = req.cookies["tv2nord_registered"];
+    const today = new Date().toDateString();
 
-    const hasDateKey = duplicateQuery.rows.some(
-      (row) => row.column_name === "date_key"
-    );
-    const hasValidColumn = duplicateQuery.rows.some(
-      (row) => row.column_name === "is_valid"
-    );
+    if (registrationCookie) {
+      try {
+        const cookieData = JSON.parse(
+          Buffer.from(registrationCookie, "base64").toString()
+        );
 
-    const dateCondition = hasDateKey
-      ? "date_key = CURRENT_DATE"
-      : "DATE(created_at) = CURRENT_DATE";
-    const validCondition = hasValidColumn ? "AND is_valid = true" : "";
+        if (cookieData.date === today) {
+          // Log duplikat forsøg (samme enhed)
+          await logRegistrationAttempt(req, kommune, antal, false, [
+            "Allerede registreret i dag på denne enhed",
+          ]);
 
-    const existingToday = await pool.query(
-      `
-      SELECT id, kommune, antal 
-      FROM registrations 
-      WHERE fingerprint = $1 AND ${dateCondition} ${validCondition}
-    `,
-      [fingerprint]
-    );
-
-    if (existingToday.rows.length > 0) {
-      await logRegistrationAttempt(req, kommune, antal, false, [
-        "Allerede registreret i dag",
-      ]);
-
-      return res.status(409).json({
-        error: "Du har allerede registreret dig i dag",
-        alreadyRegistered: true,
-        logged: true,
-      });
+          return res.status(409).json({
+            error: "Du har allerede registreret dig i dag på denne enhed",
+            alreadyRegistered: true,
+            previousRegistration: {
+              kommune: cookieData.kommune,
+              antal: cookieData.antal,
+              registeredAt: cookieData.registeredAt,
+            },
+            logged: true,
+          });
+        }
+      } catch (cookieError) {
+        // Ugyldig cookie - log fejl men fortsæt
+        console.warn("Ugyldig registrerings-cookie:", cookieError.message);
+        await logRegistrationAttempt(req, kommune, antal, false, [
+          "Ugyldig cookie data",
+        ]);
+      }
     }
 
+    // Opret gyldig registrering
     const logResult = await logRegistrationAttempt(
       req,
       kommune,
@@ -505,11 +511,46 @@ app.post("/api/register", registrationLimiter, async (req, res) => {
       []
     );
 
+    // Sæt cookie der udløber ved midnat
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0); // Midnat
+
+    const cookieData = {
+      date: today,
+      kommune: kommune,
+      antal: antal,
+      registeredAt: new Date().toISOString(),
+      id: logResult?.id,
+    };
+
+    const cookieValue = Buffer.from(JSON.stringify(cookieData)).toString(
+      "base64"
+    );
+
+    res.cookie("tv2nord_registered", cookieValue, {
+      expires: tomorrow,
+      httpOnly: true, // Kan ikke læses/ændres af JavaScript (sikkerhed)
+      secure: process.env.NODE_ENV === "production", // Kun HTTPS i prod
+      sameSite: "strict", // CSRF beskyttelse
+    });
+
     // Beregn dagens besøgsnummer
+    const dateCondition = await pool.query(`
+      SELECT column_name FROM information_schema.columns 
+      WHERE table_name = 'registrations' AND column_name = 'date_key'
+    `);
+
+    const hasDateKey = dateCondition.rows.length > 0;
+    const dateFilter = hasDateKey
+      ? "date_key = CURRENT_DATE"
+      : "DATE(created_at) = CURRENT_DATE";
+    const validFilter = hasDateKey ? "AND is_valid = true" : "";
+
     const todayCount = await pool.query(`
       SELECT SUM(antal) as total
       FROM registrations 
-      WHERE ${dateCondition} ${validCondition}
+      WHERE ${dateFilter} ${validFilter}
     `);
 
     const todayTotal = parseInt(todayCount.rows[0]?.total) || antal;
@@ -526,11 +567,46 @@ app.post("/api/register", registrationLimiter, async (req, res) => {
     });
   } catch (error) {
     console.error("Fejl ved registrering:", error);
+    await logRegistrationAttempt(req, null, null, false, [
+      "Server fejl: " + error.message,
+    ]);
     res.status(500).json({ error: "Intern serverfejl" });
   }
 });
 
-// Resten af API routes... (admin login, export, etc.)
+// Resten af API routes...
+
+// GET /api/registration-status - Tjek om enheden er registreret i dag
+app.get("/api/registration-status", (req, res) => {
+  const registrationCookie = req.cookies["tv2nord_registered"];
+  const today = new Date().toDateString();
+
+  if (!registrationCookie) {
+    return res.json({ registered: false });
+  }
+
+  try {
+    const cookieData = JSON.parse(
+      Buffer.from(registrationCookie, "base64").toString()
+    );
+
+    if (cookieData.date === today) {
+      return res.json({
+        registered: true,
+        kommune: cookieData.kommune,
+        antal: cookieData.antal,
+        registeredAt: cookieData.registeredAt,
+        id: cookieData.id,
+      });
+    }
+  } catch (error) {
+    console.warn("Ugyldig registrerings-cookie:", error.message);
+  }
+
+  res.json({ registered: false });
+});
+
+// POST /api/admin/login - Admin login
 app.post("/api/admin/login", (req, res) => {
   const { username, password } = req.body;
   const ADMIN_USER = process.env.ADMIN_USER || "admin";
