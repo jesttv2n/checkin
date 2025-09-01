@@ -173,7 +173,7 @@ app.use(express.static("public"));
 // Rate limiting med forbedret tracking
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 300,
   message: { error: "For mange anmodninger. Prøv igen senere." },
   handler: (req, res) => {
     logRegistrationAttempt(
@@ -191,7 +191,7 @@ app.use(limiter);
 
 const registrationLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 5,
+  max: 20,
   message: { error: "For mange registreringer. Vent venligst." },
   handler: (req, res) => {
     logRegistrationAttempt(
