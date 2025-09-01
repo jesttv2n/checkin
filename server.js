@@ -170,7 +170,7 @@ app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
 app.use(express.static("public"));
 
-// Rate limiting med forbedret tracking
+// Rate limiting med højere grænser
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 300,
@@ -245,6 +245,31 @@ function isValidKommune(kommune) {
     "Anden del af Danmark",
   ];
   return validKommuner.includes(kommune);
+}
+
+// Hjælpefunktioner til dansk tid
+function getDanishDate() {
+  return new Date(
+    new Date().toLocaleString("en-US", { timeZone: "Europe/Copenhagen" })
+  );
+}
+
+function getDanishDateString() {
+  const danishDate = getDanishDate();
+  return danishDate.toDateString();
+}
+
+function getDanishMidnight() {
+  const danishDate = getDanishDate();
+  const midnight = new Date(danishDate);
+  midnight.setDate(midnight.getDate() + 1);
+  midnight.setHours(0, 0, 0, 0);
+
+  // Konverter tilbage til UTC for cookie expiry
+  const utcMidnight = new Date(
+    midnight.toLocaleString("en-US", { timeZone: "UTC" })
+  );
+  return utcMidnight;
 }
 
 // Log ALLE registreringsforsøg til database (backward compatible)
@@ -349,7 +374,7 @@ function validateRegistration(kommune, antal) {
 
 // API Routes
 
-// GET /api/stats - Backward compatible
+// GET /api/stats - Med dansk tidszone
 app.get("/api/stats", async (req, res) => {
   try {
     // Tjek om is_valid kolonne eksisterer
@@ -364,41 +389,45 @@ app.get("/api/stats", async (req, res) => {
     const validFilter = hasValidColumn.rows[0].exists
       ? "AND is_valid = true"
       : "";
-    const dateFilter = hasValidColumn.rows[0].exists
-      ? "date_key = CURRENT_DATE"
-      : "DATE(created_at) = CURRENT_DATE";
 
-    // Dagens statistikker
-    const todayStats = await pool.query(`
+    // Brug dansk dato for dagens statistikker
+    const danishDateStr = getDanishDate().toISOString().split("T")[0];
+
+    // Dagens statistikker (dansk tid)
+    const todayStats = await pool.query(
+      `
       SELECT 
         COUNT(*) as count,
         SUM(antal) as total_visitors
       FROM registrations 
-      WHERE ${dateFilter} ${validFilter}
-    `);
+      WHERE DATE(created_at AT TIME ZONE 'Europe/Copenhagen') = $1 ${validFilter}
+    `,
+      [danishDateStr]
+    );
 
     // Total statistikker
     const totalStats = await pool.query(`
       SELECT 
         COUNT(*) as count,
         SUM(antal) as total_visitors,
-        COUNT(DISTINCT ${
-          hasValidColumn.rows[0].exists ? "date_key" : "DATE(created_at)"
-        }) as total_days
+        COUNT(DISTINCT DATE(created_at AT TIME ZONE 'Europe/Copenhagen')) as total_days
       FROM registrations 
       WHERE TRUE ${validFilter}
     `);
 
-    // Kommune statistikker for i dag
-    const kommuneStats = await pool.query(`
+    // Kommune statistikker for i dag (dansk tid)
+    const kommuneStats = await pool.query(
+      `
       SELECT kommune, SUM(antal) as count
       FROM registrations 
-      WHERE ${dateFilter} ${validFilter}
+      WHERE DATE(created_at AT TIME ZONE 'Europe/Copenhagen') = $1 ${validFilter}
       GROUP BY kommune
       ORDER BY count DESC
-    `);
+    `,
+      [danishDateStr]
+    );
 
-    // Seneste registrering
+    // Seneste registrering (vis i dansk tid)
     const lastRegistration = await pool.query(`
       SELECT created_at
       FROM registrations 
@@ -424,6 +453,7 @@ app.get("/api/stats", async (req, res) => {
       ? new Date(lastReg.created_at).toLocaleTimeString("da-DK", {
           hour: "2-digit",
           minute: "2-digit",
+          timeZone: "Europe/Copenhagen", // Vis i dansk tid
         })
       : "Ingen endnu";
 
@@ -443,7 +473,7 @@ app.get("/api/stats", async (req, res) => {
   }
 });
 
-// POST /api/register - Med cookie-baseret duplikatsjek + fuld logging
+// POST /api/register - Med cookie-baseret duplikatsjek + fuld logging + dansk tid
 app.post("/api/register", registrationLimiter, async (req, res) => {
   const { kommune, antal } = req.body;
 
@@ -466,9 +496,9 @@ app.post("/api/register", registrationLimiter, async (req, res) => {
       });
     }
 
-    // Tjek cookie for duplikatsjek (device-specifik)
+    // Tjek cookie for duplikatsjek (device-specifik) - brug dansk dato
     const registrationCookie = req.cookies["tv2nord_registered"];
-    const today = new Date().toDateString();
+    const today = getDanishDateString(); // Dansk dato
 
     if (registrationCookie) {
       try {
@@ -511,16 +541,15 @@ app.post("/api/register", registrationLimiter, async (req, res) => {
       []
     );
 
-    // Sæt cookie der udløber ved midnat
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(0, 0, 0, 0); // Midnat
+    // Sæt cookie der udløber ved dansk midnat
+    const danishMidnight = getDanishMidnight();
 
     const cookieData = {
       date: today,
       kommune: kommune,
       antal: antal,
-      registeredAt: new Date().toISOString(),
+      registeredAt: new Date().toISOString(), // UTC timestamp til logging
+      danishTime: getDanishDate().toISOString(), // Dansk tid til display
       id: logResult?.id,
     };
 
@@ -529,22 +558,23 @@ app.post("/api/register", registrationLimiter, async (req, res) => {
     );
 
     res.cookie("tv2nord_registered", cookieValue, {
-      expires: tomorrow,
-      httpOnly: true, // Kan ikke læses/ændres af JavaScript (sikkerhed)
-      secure: process.env.NODE_ENV === "production", // Kun HTTPS i prod
-      sameSite: "strict", // CSRF beskyttelse
+      expires: danishMidnight, // Udløber ved dansk midnat
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
     });
 
-    // Beregn dagens besøgsnummer
+    // Beregn dagens besøgsnummer (dansk tid)
     const dateCondition = await pool.query(`
       SELECT column_name FROM information_schema.columns 
       WHERE table_name = 'registrations' AND column_name = 'date_key'
     `);
 
     const hasDateKey = dateCondition.rows.length > 0;
+    const danishDateStr = getDanishDate().toISOString().split("T")[0];
     const dateFilter = hasDateKey
-      ? "date_key = CURRENT_DATE"
-      : "DATE(created_at) = CURRENT_DATE";
+      ? `date_key = '${danishDateStr}'`
+      : `DATE(created_at AT TIME ZONE 'Europe/Copenhagen') = '${danishDateStr}'`;
     const validFilter = hasDateKey ? "AND is_valid = true" : "";
 
     const todayCount = await pool.query(`
@@ -574,12 +604,10 @@ app.post("/api/register", registrationLimiter, async (req, res) => {
   }
 });
 
-// Resten af API routes...
-
-// GET /api/registration-status - Tjek om enheden er registreret i dag
+// GET /api/registration-status - Tjek om enheden er registreret i dag (dansk tid)
 app.get("/api/registration-status", (req, res) => {
   const registrationCookie = req.cookies["tv2nord_registered"];
-  const today = new Date().toDateString();
+  const today = getDanishDateString(); // Brug dansk dato
 
   if (!registrationCookie) {
     return res.json({ registered: false });
@@ -591,11 +619,20 @@ app.get("/api/registration-status", (req, res) => {
     );
 
     if (cookieData.date === today) {
+      // Vis dansk tid til brugeren
+      const displayTime = cookieData.danishTime || cookieData.registeredAt;
+      const danishTime = new Date(displayTime).toLocaleTimeString("da-DK", {
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: "Europe/Copenhagen",
+      });
+
       return res.json({
         registered: true,
         kommune: cookieData.kommune,
         antal: cookieData.antal,
-        registeredAt: cookieData.registeredAt,
+        registeredAt: cookieData.registeredAt, // UTC til system
+        danishTime: danishTime, // Dansk tid til display
         id: cookieData.id,
       });
     }
