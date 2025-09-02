@@ -548,12 +548,22 @@
               } else {
                 showError(data.error || "Der opstod en fejl. Prøv igen.");
               }
+
+              // Redirect efter fejl - giv brugeren tid til at se fejlmeddelelsen
+              setTimeout(() => {
+                goToTV2();
+              }, 4000); // 4 sekunder for at læse fejlmeddelelsen
             }
           } catch (error) {
             console.error("Network error:", error);
             showError(
               "Ingen forbindelse til serveren. Kontroller din internetforbindelse og prøv igen."
             );
+
+            // Redirect efter netværksfejl
+            setTimeout(() => {
+              goToTV2();
+            }, 4000); // 4 sekunder for at læse fejlmeddelelsen
           } finally {
             // Reset submission state
             isSubmitting = false;
